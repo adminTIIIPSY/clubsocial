@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard – ClubSocial</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1 { color: #e33; }
+    .control {
+      margin-bottom: 24px;
+      padding: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .control h3 {
+      margin-top: 0;
+    }
+    .control input, .control select, .control textarea {
+      width: calc(100% - 14px);
+      padding: 6px;
+      margin-bottom: 8px;
+      font-size: 1em;
+    }
+    .control button {
+      padding: 8px 16px;
+      font-size: 1em;
+      cursor: pointer;
+      background: #e33;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    .control button:hover { background: #c22; }
+    #statsResult {
+      white-space: pre-wrap;
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+  <script type="module">
+    import { initializeApp }               from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut }
+                                          from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc }   from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFunctions, httpsCallable }
+                                          from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
+
+    // --- Firebase init ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBDPUoVjXBPILsZHjN_5pYmRycTiFEfPi4",
+      authDomain: "clubsocial-9a801.firebaseapp.com",
+      projectId: "clubsocial-9a801",
+      storageBucket: "clubsocial-9a801.firebasestorage.app",
+      messagingSenderId: "109445034619",
+      appId: "1:109445034619:web:9e58bedb70737d9df268de"
+    };
+    const app       = initializeApp(firebaseConfig);
+    const auth      = getAuth(app);
+    const db        = getFirestore(app);
+    const functions = getFunctions(app);
+
+    // --- Cloud Functions stubs ---
+    const kickPlayerFn     = httpsCallable(functions, 'kickPlayer');
+    const banPlayerFn      = httpsCallable(functions, 'banPlayer');
+    const getUserStatsFn   = httpsCallable(functions, 'getUserStats');
+    const adjustBalanceFn  = httpsCallable(functions, 'adjustBalance');
+    const toggleAIFn       = httpsCallable(functions, 'toggleAIPlayers');
+    const broadcastMsgFn   = httpsCallable(functions, 'broadcastMessage');
+
+    // --- Auth guard for admins ---
+    onAuthStateChanged(auth, async user => {
+      if (!user) return window.location.href = '/login.html';
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists() || !snap.data().isAdmin) {
+        alert("Access denied.");
+        await signOut(auth);
+        return window.location.href = '/login.html';
+      }
+      document.getElementById('welcome').textContent =
+        `Welcome, Admin ${snap.data().username}!`;
+    });
+
+    // --- Handlers ---
+    window.handleKick = async () => {
+      const uid = document.getElementById('kickUid').value.trim();
+      if (!uid) return alert("Enter a user UID.");
+      try {
+        const { data } = await kickPlayerFn({ uid });
+        alert(data.message || 'Player kicked.');
+      } catch(e) {
+        alert("Error: " + e.message);
+      }
+    };
+
+    window.handleBan = async () => {
+      const uid = document.getElementById('banUid').value.trim();
+      if (!uid) return alert("Enter a user UID.");
+      try {
+        const { data } = await banPlayerFn({ uid });
+        alert(data.message || 'Player banned.');
+      } catch(e) {
+        alert("Error: " + e.message);
+      }
+    };
+
+    window.handleStats = async () => {
+      const uid = document.getElementById('statsUid').value.trim();
+      if (!uid) return alert("Enter a user UID.");
+      try {
+        const { data } = await getUserStatsFn({ uid });
+        document.getElementById('statsResult').textContent =
+          JSON.stringify(data, null, 2);
+      } catch(e) {
+        alert("Error: " + e.message);
+      }
+    };
+
+    window.handleAdjust = async () => {
+      const uid    = document.getElementById('balUid').value.trim();
+      const amount = parseFloat(document.getElementById('balAmt').value);
+      if (!uid || isNaN(amount)) return alert("Enter UID and valid amount.");
+      try {
+        const { data } = await adjustBalanceFn({ uid, amount });
+        alert(data.message || 'Balance updated.');
+      } catch(e) {
+        alert("Error: " + e.message);
+      }
+    };
+
+    window.handleToggleAI = async () => {
+      const enabled = document.getElementById('aiToggle').checked;
+      try {
+        const { data } = await toggleAIFn({ enabled });
+        alert(data.message || `AI Players ${enabled ? 'enabled' : 'disabled'}.`);
+      } catch(e) {
+        alert("Error: " + e.message);
+      }
+    };
+
+    window.handleBroadcast = async () => {
+      const msg = document.getElementById('broadcastMsg').value.trim();
+      if (!msg) return alert("Enter a message.");
+      try {
+        const { data } = await broadcastMsgFn({ message: msg });
+        alert(data.message || 'Broadcast sent.');
+      } catch(e) {
+        alert("Error: " + e.message);
+      }
+    };
+  </script>
+</head>
+<body>
+  <h1 id="welcome">Checking permissions…</h1>
+
+  <div class="control">
+    <h3>Kick Player</h3>
+    <input id="kickUid" type="text" placeholder="Player UID">
+    <button onclick="handleKick()">Kick Player</button>
+  </div>
+
+  <div class="control">
+    <h3>Ban Player</h3>
+    <input id="banUid" type="text" placeholder="Player UID">
+    <button onclick="handleBan()">Ban Player</button>
+  </div>
+
+  <div class="control">
+    <h3>Check User Stats</h3>
+    <input id="statsUid" type="text" placeholder="Player UID">
+    <button onclick="handleStats()">Get Stats</button>
+    <pre id="statsResult"></pre>
+  </div>
+
+  <div class="control">
+    <h3>Adjust Player Balance</h3>
+    <input id="balUid" type="text" placeholder="Player UID">
+    <input id="balAmt" type="number" step="0.01" placeholder="Amount to add/subtract">
+    <button onclick="handleAdjust()">Update Balance</button>
+  </div>
+
+  <div class="control">
+    <h3>Toggle AI Players</h3>
+    <label><input id="aiToggle" type="checkbox"> Enable AI Players</label><br>
+    <button onclick="handleToggleAI()">Apply</button>
+  </div>
+
+  <div class="control">
+    <h3>Broadcast Message</h3>
+    <textarea id="broadcastMsg" rows="3" placeholder="Announcement to all users"></textarea>
+    <button onclick="handleBroadcast()">Send Broadcast</button>
+  </div>
+</body>
+</html>

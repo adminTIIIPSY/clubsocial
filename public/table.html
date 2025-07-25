@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClubSocial Poker Table</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+    }
+    .table {
+      width: 100vw;
+      height: 100vh;
+      background: url('assets/table-bg.png') no-repeat center center;
+      background-size: cover;
+      position: relative;
+    }
+    .seat {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 100px;
+      font-size: 14px;
+      border: 2px solid #00ff00;
+    }
+    .seat.you {
+      border-color: #ff0000;
+    }
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    .controls button {
+      padding: 10px 20px;
+      background: #111;
+      border: 2px solid #fff;
+      color: #0f0;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #0f0;
+    }
+    .pot {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      color: yellow;
+      background: rgba(0,0,0,0.6);
+      padding: 10px 20px;
+      border-radius: 12px;
+    }
+    .card {
+      width: 60px;
+      height: 90px;
+      background-size: cover;
+      background-repeat: no-repeat;
+      position: relative;
+    }
+    .hand, .board {
+      display: flex;
+      gap: 20px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .hand {
+      bottom: 140px;
+    }
+    .board {
+      top: 38%;
+    }
+    .winner-banner {
+      position: absolute;
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 26px;
+      background: rgba(0, 255, 0, 0.3);
+      padding: 12px 24px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px lime;
+    }
+  </style>
+</head>
+<body>
+  <div class="table" id="poker-table">
+    <div class="pot" id="pot">Pot: 0</div>
+    <div class="winner-banner" id="winner" style="display:none;"></div>
+    <div class="controls">
+      <button onclick="fold()">FOLD</button>
+      <button onclick="call()">CALL</button>
+      <button onclick="raise()">RAISE</button>
+    </div>
+
+    <!-- Seat placeholders -->
+    <div class="seat" style="top: 10%; left: 45%;">Seat 1</div>
+    <div class="seat" style="top: 20%; left: 75%;">Seat 2</div>
+    <div class="seat" style="top: 45%; left: 85%;">Seat 3</div>
+    <div class="seat" style="top: 70%; left: 75%;">Seat 4</div>
+    <div class="seat you" style="top: 80%; left: 45%;">You</div>
+    <div class="seat" style="top: 70%; left: 15%;">Seat 6</div>
+    <div class="seat" style="top: 45%; left: 5%;">Seat 7</div>
+    <div class="seat" style="top: 20%; left: 15%;">Seat 8</div>
+    <div class="seat" style="top: 10%; left: 45%;">Seat 9</div>
+
+    <!-- Cards and board -->
+    <div class="hand" id="player-hand"></div>
+    <div class="board" id="board-cards"></div>
+  </div>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import {
+      getDatabase,
+      ref,
+      set,
+      get,
+      onValue,
+      push,
+      update,
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js';
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyBDPUoVjXBPILsZHjN_5pYmRycTiFEfPi4",
+  authDomain: "clubsocial-9a801.firebaseapp.com",
+  databaseURL: "https://clubsocial-9a801-default-rtdb.firebaseio.com",
+  projectId: "clubsocial-9a801",
+  storageBucket: "clubsocial-9a801.firebasestorage.app",
+  messagingSenderId: "109445034619",
+  appId: "1:109445034619:web:9e58bedb70737d9df268de"
+};
+
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const roomId = "Room1";
+    const seat = 5; // your seat number (can be dynamic later)
+    const tableRef = ref(db, `rooms/${roomId}/table`);
+    const actionsRef = ref(db, `rooms/${roomId}/actions`);
+    const turnRef = ref(db, `rooms/${roomId}/turn`);
+
+    const suits = ['S', 'H', 'D', 'C'];
+    const ranks = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+    const deck = [];
+
+    for (let s of suits) for (let r of ranks) deck.push(`${r}${s}`);
+
+    function shuffleDeck() {
+      let shuffled = [...deck];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    async function dealHand() {
+      const cards = shuffleDeck();
+      const players = {};
+      const seats = [1,2,3,4,5,6,7,8,9];
+      for (let s of seats) {
+        players[`seat${s}`] = [cards.pop(), cards.pop()];
+      }
+      const board = [cards.pop(), cards.pop(), cards.pop(), cards.pop(), cards.pop()];
+      await set(tableRef, {
+        players,
+        board,
+        phase: 'preflop',
+        pot: 0,
+        currentBet: 0,
+        folded: {},
+        winner: null
+      });
+      await set(turnRef, { current: 1 });
+    }
+
+    function renderCards(cards, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      cards.forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.backgroundImage = `url('assets/poker/deck/${card}.png')`;
+        container.appendChild(div);
+      });
+    }
+
+    function canAct(currentTurn) {
+      return seat === currentTurn;
+    }
+
+    async function nextTurn(current) {
+      const next = current >= 9 ? 1 : current + 1;
+      await update(turnRef, { current: next });
+    }
+    function fold() {
+      get(turnRef).then(snapshot => {
+        if (!canAct(snapshot.val().current)) return;
+        push(actionsRef, { seat, action: 'fold', timestamp: Date.now() });
+        update(tableRef, {
+          [`folded/seat${seat}`]: true
+        });
+        nextTurn(snapshot.val().current);
+      });
+    }
+
+    function call() {
+      get(tableRef).then(snap => {
+        const table = snap.val();
+        get(turnRef).then(turnSnap => {
+          if (!canAct(turnSnap.val().current)) return;
+          const callAmount = table.currentBet || 0;
+          update(tableRef, {
+            pot: (table.pot || 0) + callAmount
+          });
+          push(actionsRef, { seat, action: 'call', amount: callAmount, timestamp: Date.now() });
+          nextTurn(turnSnap.val().current);
+        });
+      });
+    }
+
+    function raise() {
+      get(tableRef).then(snap => {
+        const table = snap.val();
+        get(turnRef).then(turnSnap => {
+          if (!canAct(turnSnap.val().current)) return;
+          const raiseAmount = (table.currentBet || 0) + 20;
+          update(tableRef, {
+            pot: (table.pot || 0) + raiseAmount,
+            currentBet: raiseAmount
+          });
+          push(actionsRef, { seat, action: 'raise', amount: raiseAmount, timestamp: Date.now() });
+          nextTurn(turnSnap.val().current);
+        });
+      });
+    }
+
+    function updateBoard(phase, board) {
+      if (phase === 'flop') {
+        renderCards(board.slice(0, 3), 'board-cards');
+      } else if (phase === 'turn') {
+        renderCards(board.slice(0, 4), 'board-cards');
+      } else if (phase === 'river') {
+        renderCards(board.slice(0, 5), 'board-cards');
+      }
+    }
+
+    function advancePhase(currentPhase) {
+      const nextPhase = {
+        preflop: 'flop',
+        flop: 'turn',
+        turn: 'river',
+        river: 'showdown'
+      };
+      const next = nextPhase[currentPhase];
+      if (next) update(tableRef, { phase: next });
+    }
+
+    onValue(turnRef, snapshot => {
+      const val = snapshot.val();
+      if (val) {
+        const controls = document.querySelector('.controls');
+        controls.style.display = (val.current === seat) ? 'flex' : 'none';
+      }
+    });
+
+    onValue(tableRef, snapshot => {
+      const table = snapshot.val();
+      if (!table) return;
+
+      const hand = table.players?.[`seat${seat}`];
+      if (hand) renderCards(hand, 'player-hand');
+
+      document.getElementById("pot").innerText = `Pot: ${table.pot || 0}`;
+      updateBoard(table.phase, table.board);
+
+      if (table.phase === 'showdown') {
+        evaluateWinner(table);
+      }
+    });
+    function evaluateWinner(table) {
+      const activePlayers = Object.keys(table.players || {}).filter(p => !table.folded?.[p]);
+      const hands = {};
+
+      activePlayers.forEach(playerKey => {
+        const hand = table.players[playerKey];
+        const fullHand = [...hand, ...table.board];
+        hands[playerKey] = scoreHand(fullHand);
+      });
+
+      let bestScore = -1;
+      let winners = [];
+
+      for (const player in hands) {
+        if (hands[player].score > bestScore) {
+          bestScore = hands[player].score;
+          winners = [player];
+        } else if (hands[player].score === bestScore) {
+          winners.push(player); // Tie
+        }
+      }
+
+      const winnerBanner = document.getElementById("winner");
+      if (winners.length === 1) {
+        winnerBanner.innerText = `${winners[0]} wins with ${hands[winners[0]].name}!`;
+      } else {
+        winnerBanner.innerText = `Split pot! ${winners.join(' & ')} tied with ${hands[winners[0]].name}`;
+      }
+      winnerBanner.style.display = 'block';
+    }
+
+    function scoreHand(cards) {
+      // Simplified scoring for now (Ace high > King > ... > 2)
+      // Expand with actual rank logic: flush, straight, etc.
+      const values = cards.map(c => c.slice(0, -1));
+      const name = `High ${values.sort((a,b)=>ranks.indexOf(b)-ranks.indexOf(a))[0]}`;
+      const score = Math.max(...values.map(v => ranks.indexOf(v)));
+      return { score, name };
+    }
+
+    // Utility: Auto start game if needed
+    window.onload = () => {
+      get(tableRef).then(snap => {
+        if (!snap.exists()) dealHand();
+      });
+    };
+  </script>
+</body>
+</html>

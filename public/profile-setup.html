@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClubSocial – Complete Your Profile</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Orbitron, sans-serif;
+      background: #080808;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      width: 100%;
+      background: #111;
+      padding: 12px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      color: #32ff7e;
+    }
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 600px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    section {
+      margin-bottom: 32px;
+    }
+    section h2 {
+      margin-bottom: 12px;
+      color: #32ff7e;
+      font-size: 1.4rem;
+    }
+    .info p {
+      margin: 6px 0;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 12px;
+    }
+    .field label {
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+    .field input {
+      padding: 8px;
+      font-size: 1rem;
+      background: #222;
+      border: 2px solid #444;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .field input:invalid {
+      border-color: crimson;
+    }
+    .avatars {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+    .avatar-option {
+      width: 80px;
+      height: 80px;
+      border: 3px solid transparent;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .avatar-option.selected {
+      border-color: #32ff7e;
+    }
+    .avatar-option img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #complete-btn {
+      display: block;
+      margin: 0 auto;
+      padding: 12px 24px;
+      background: #444;
+      color: #aaa;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: not-allowed;
+      transition: background 0.2s, color 0.2s;
+    }
+    #complete-btn.enabled {
+      background: #32ff7e;
+      color: #000;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Finalize Your Profile</h1>
+  </header>
+  <main>
+    <!-- 1) Show sign-up info for confirmation -->
+    <section class="info">
+      <h2>1. Confirm Your Details</h2>
+      <p><strong>Username:</strong> <span id="info-username"></span></p>
+      <p><strong>Full Name:</strong> <span id="info-name"></span></p>
+      <p><strong>Birthday:</strong> <span id="info-bday"></span></p>
+      <p><strong>Address:</strong> <span id="info-address"></span></p>
+    </section>
+
+    <!-- 2) Email & Phone -->
+    <section>
+      <h2>2. Verify Your Contact</h2>
+      <div class="field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" placeholder="you@example.com" required />
+      </div>
+      <div class="field">
+        <label for="phone">Phone number</label>
+        <input type="tel" id="phone" placeholder="123-456-7890"
+               pattern="^\\d{3}[- ]?\\d{3}[- ]?\\d{4}$" required />
+      </div>
+    </section>
+
+    <!-- 3) Avatar selection -->
+    <section>
+      <h2>3. Choose Your Avatar</h2>
+      <div class="avatars" id="avatars-container">
+        <!-- JS will inject avatar options here -->
+      </div>
+    </section>
+
+    <!-- 4) Complete -->
+    <button id="complete-btn" disabled>Complete Profile</button>
+  </main>
+
+  <script>
+    // 1) Populate user info from localStorage
+    const infoUsername = localStorage.getItem('signup_username') || '';
+    const infoName     = localStorage.getItem('signup_name')     || '';
+    const infoBday     = localStorage.getItem('signup_bday')     || '';
+    const infoAddr     = localStorage.getItem('signup_address')  || '';
+    if (!infoUsername || !infoName || !infoBday || !infoAddr) {
+      // missing data → go back to register
+      window.location.href = 'register.html';
+    }
+    document.getElementById('info-username').textContent = infoUsername;
+    document.getElementById('info-name').textContent     = infoName;
+    document.getElementById('info-bday').textContent     = infoBday;
+    document.getElementById('info-address').textContent  = infoAddr;
+
+    // 2) Track validity of email & phone
+    const emailEl = document.getElementById('email');
+    const phoneEl = document.getElementById('phone');
+    let emailValid = false, phoneValid = false;
+
+    emailEl.addEventListener('input', () => {
+      emailValid = emailEl.checkValidity();
+      updateCompleteButton();
+    });
+    phoneEl.addEventListener('input', () => {
+      phoneValid = phoneEl.checkValidity();
+      updateCompleteButton();
+    });
+
+    // 3) Load avatars (exclude neon_player8.png)
+    const avatars = [
+      'neon_player1.png','neon_player2.png','neon_player3.png',
+      'neon_player4.png','neon_player5.png','neon_player6.png',
+      'neon_player7.png','neon_player9.png'
+    ];
+    let selectedAvatar = null;
+    const container = document.getElementById('avatars-container');
+    avatars.forEach(file => {
+      const div = document.createElement('div');
+      div.className = 'avatar-option';
+      const img = document.createElement('img');
+      img.src = `assets/avatars/${file}`;
+      img.alt = file;
+      div.appendChild(img);
+      div.addEventListener('click', () => {
+        document.querySelectorAll('.avatar-option')
+                .forEach(d => d.classList.remove('selected'));
+        div.classList.add('selected');
+        selectedAvatar = file;
+        updateCompleteButton();
+      });
+      container.appendChild(div);
+    });
+
+    // 4) Enable Complete when all are done
+    const completeBtn = document.getElementById('complete-btn');
+    function updateCompleteButton() {
+      if (emailValid && phoneValid && selectedAvatar) {
+        completeBtn.classList.add('enabled');
+        completeBtn.disabled = false;
+      } else {
+        completeBtn.classList.remove('enabled');
+        completeBtn.disabled = true;
+      }
+    }
+
+    // On click, save to localStorage then redirect
+    completeBtn.addEventListener('click', () => {
+      localStorage.setItem('profile_email', emailEl.value.trim());
+      localStorage.setItem('profile_phone', phoneEl.value.trim());
+      localStorage.setItem('profile_avatar', selectedAvatar);
+      window.location.href = 'poker-lobby.html';
+    });
+  </script>
+</body>
+</html>

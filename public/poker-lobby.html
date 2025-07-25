@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClubSocial Poker Lobby</title>
+  <script>
+    function switchMode(mode) {
+      document.querySelectorAll('.tables').forEach(el => {
+        el.style.display = el.dataset.mode === mode ? 'grid' : 'none';
+      });
+      document.getElementById('modeIndicator').textContent = mode;
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      // Mock wallet fetch; replace with real Firebase call
+      setTimeout(() => {
+        document.getElementById('walletAmt').textContent = '1,234 GC';
+      }, 200);
+      switchMode('GC');
+    });
+  </script>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: Orbitron, sans-serif;
+    }
+    header {
+      background: #111;
+      padding: 16px;
+      text-align: center;
+    }
+    #modeToggle button {
+      margin: 0 8px;
+      padding: 8px 16px;
+      background: lime;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    #modeToggle button:hover { background: #0f0; }
+    #tablesContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+      gap: 16px;
+      padding: 20px;
+    }
+    .tables {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+      gap: 16px;
+    }
+    .tableCard {
+      background: #222;
+      border: 2px solid lime;
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+    }
+    .tableCard h3 {
+      margin: 0 0 8px;
+    }
+    .tableCard button {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      padding: 8px 12px;
+      background: lime;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #wallet {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: #111;
+      padding: 8px 12px;
+      border: 2px solid gold;
+      border-radius: 6px;
+    }
+    #returnMain {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      background: #111;
+      padding: 8px 12px;
+      border: 2px solid lime;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📋 Poker Lobby</h1>
+    <div id="modeToggle">
+      <button onclick="switchMode('GC')">GoldCoin (GC)</button>
+      <button onclick="switchMode('SC')">SweepCoin (SC)</button>
+    </div>
+  </header>
+
+  <a id="returnMain" href="index.html">&larr; Main Menu</a>
+  <div id="wallet">Balance: <span id="walletAmt">Loading...</span></div>
+
+  <div id="tablesContainer">
+    <!-- GoldCoin Tables -->
+    <div class="tables" data-mode="GC">
+      <div class="tableCard">
+        <h3>GC Hold'em (9 seats)</h3>
+        <p>Buy-in: 50–200 GC<br>Blinds: 5/10</p>
+        <button onclick="location.href='table.html?room=gc-holdem-9'">Join</button>
+      </div>
+      <div class="tableCard">
+        <h3>GC Omaha H/L (9 seats)</h3>
+        <p>Buy-in: 250–1000 GC<br>Blinds: 25/50</p>
+        <button onclick="location.href='table.html?room=gc-omaha-9'">Join</button>
+      </div>
+      <div class="tableCard">
+        <h3>GC R.O.E. (9 seats)</h3>
+        <p>Variant: Round-of-Each</p>
+        <button onclick="location.href='table.html?room=gc-roe-9'">Join</button>
+      </div>
+      <!-- Repeat for 6-seat variants as needed -->
+    </div>
+
+    <!-- SweepCoin Tables -->
+    <div class="tables" data-mode="SC">
+      <div class="tableCard">
+        <h3>SC Hold'em (9 seats)</h3>
+        <p>Buy-in: 2–5 SC<br>Blinds: 0.10/0.20</p>
+        <button onclick="location.href='table.html?room=sc-holdem-9'">Join</button>
+      </div>
+      <div class="tableCard">
+        <h3>SC Omaha H/L (9 seats)</h3>
+        <p>Buy-in: 5–10 SC<br>Blinds: 0.25/0.50</p>
+        <button onclick="location.href='table.html?room=sc-omaha-9'">Join</button>
+      </div>
+      <div class="tableCard">
+        <h3>SC R.O.E. (9 seats)</h3>
+        <p>Variant: Round-of-Each</p>
+        <button onclick="location.href='table.html?room=sc-roe-9'">Join</button>
+      </div>
+      <!-- Repeat other SC tables similarly -->
+    </div>
+  </div>
+</body>
+</html>

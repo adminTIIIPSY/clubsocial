@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClubSocial Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: url('assets/club-bg-neon.png') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Orbitron', sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .signup-container {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px red, 0 0 30px purple;
+    }
+
+    h1 {
+      text-align: center;
+      text-shadow: 0 0 10px red, 0 0 20px purple;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-family: 'Orbitron', sans-serif;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      box-shadow: 0 0 10px red;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: darkred;
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <h1>Sign Up for ClubSocial</h1>
+    <form id="signupForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" required>
+
+      <label for="email">Email:</label>
+      <input type="email" id="email" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" required>
+
+      <label for="birthday">Birthday:</label>
+      <input type="date" id="birthday" required>
+
+      <label for="address">Address:</label>
+      <input type="text" id="address" required>
+
+      <button type="submit">Sign Up</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBDPUoVjXBPILsZHjN_5pYmRycTiFEfPi4",
+      authDomain: "clubsocial-9a801.firebaseapp.com",
+      databaseURL: "https://clubsocial-9a801-default-rtdb.firebaseio.com",
+      projectId: "clubsocial-9a801",
+      storageBucket: "clubsocial-9a801.firebasestorage.app",
+      messagingSenderId: "109445034619",
+      appId: "1:109445034619:web:9e58bedb70737d9df268de"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const birthday = document.getElementById("birthday").value;
+      const address = document.getElementById("address").value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        console.log("User signed up:", user.uid);
+
+        // Optional: Save extra profile info to database later
+        // Redirect to profile setup or avatar selection
+        window.location.href = "profile-setup.html";
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

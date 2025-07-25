@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to ClubSocial</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Orbitron, sans-serif; background: #080808; color: #e0e0e0; }
+    header { position: fixed; top:0; left:0; width:100%; background: rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:space-between; padding:16px 32px; z-index:1000; }
+    .logo { font-size:1.8rem; color: #32ff7e; font-weight:bold; }
+    nav a { margin-left:20px; padding:8px 16px; border-radius:4px; background: #222; color: #e0e0e0; transition: background 0.2s; }
+    nav a:hover { background: #333; }
+    .hero {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      text-align:center;
+      padding:0 20px;
+      /* CSS neon gradient background */
+      background:
+        radial-gradient(circle at center, #111111, #000000),
+        radial-gradient(circle at bottom left, rgba(50,255,126,0.1), transparent),
+        radial-gradient(circle at top right, rgba(50,255,126,0.05), transparent);
+      background-blend-mode: normal, screen, overlay;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero img { width: 180px; height:180px; border-radius:50%; border:4px solid #32ff7e; box-shadow: 0 0 20px #32ff7e; margin-bottom:24px; }
+    .hero h1 { font-size:3rem; color: #32ff7e; margin-bottom:16px; }
+    .hero p { font-size:1.2rem; margin-bottom:32px; max-width:600px; line-height:1.5; }
+    .btn-group { display:flex; gap:20px; }
+    .btn { padding:14px 32px; font-size:1rem; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition: transform 0.2s, background 0.2s; }
+    .btn-signup { background: #32ff7e; color: #000; }
+    .btn-login { background: #1e272e; color: #fff; }
+    .btn:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">ClubSocial</div>
+    <nav>
+      <a href="login.html">Log In</a>
+      <a href="register.html">Sign Up</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <img src="assets/avatars/neon_player8.png" alt="Nova - ClubSocial Mascot" />
+    <h1>Welcome to ClubSocial</h1>
+    <p>Experience our free-to-play sweeps casino: neon-lit poker tables, thrilling slots, and social gaming—all in one place. No purchase necessary!</p>
+    <div class="btn-group">
+      <button class="btn btn-signup" onclick="location.href='register.html'">Sign Up</button>
+      <button class="btn btn-login" onclick="location.href='login.html'">Log In</button>
+    </div>
+  </section>
+</body>
+</html>

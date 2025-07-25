@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClubSocial Lobby</title>
+  <style>
+    body {
+      background: #000;
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #111;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 0 15px red;
+    }
+    .wallet {
+      font-size: 18px;
+      background: #222;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px green;
+    }
+    /* style your admin link similarly */
+    #adminLink {
+      display: none;
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 12px;
+      border: 1px solid #e33;
+      border-radius: 6px;
+      box-shadow: 0 0 5px red;
+      margin-left: 1rem;
+    }
+    #adminLink:hover {
+      background: #e33;
+      color: #000;
+    }
+    h1 {
+      margin-top: 40px;
+      font-size: 3em;
+      text-shadow: 0 0 10px red, 0 0 20px purple;
+    }
+    .game-links {
+      margin-top: 40px;
+    }
+    .game-links a {
+      display: inline-block;
+      margin: 20px;
+      padding: 20px 40px;
+      background: #111;
+      color: white;
+      text-decoration: none;
+      border: 2px solid red;
+      border-radius: 10px;
+      box-shadow: 0 0 10px red;
+      transition: all 0.3s ease-in-out;
+    }
+    .game-links a:hover {
+      background: red;
+      color: black;
+      box-shadow: 0 0 20px purple;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🔥 ClubSocial 🔥</div>
+    <div class="wallet">
+      Wallet: <span id="gc">0gc</span> / <span id="sc">0sc</span>
+    </div>
+    <!-- Admin Panel link — hidden by default -->
+    <a id="adminLink" href="/admin.html">⚙️ Admin Panel</a>
+  </header>
+
+  <h1>Welcome to the Lobby</h1>
+
+  <div class="game-links">
+    <a href="poker-lobby.html">♠️ Play Poker</a>
+    <a href="slots.html">🎰 Play Slots</a>
+    <a href="crash.html">🚀 Crash Game</a>
+    <a href="og.html">✨ Original Games</a>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBDPUoVjXBPILsZHjN_5pYmRycTiFEfPi4",
+      authDomain: "clubsocial-9a801.firebaseapp.com",
+      projectId: "clubsocial-9a801",
+      storageBucket: "clubsocial-9a801.firebasestorage.app",
+      messagingSenderId: "109445034619",
+      appId: "1:109445034619:web:9e58bedb70737d9df268de"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (!userDoc.exists()) {
+        // no user record—kick them back to login
+        window.location.href = "login.html";
+        return;
+      }
+
+      const data = userDoc.data();
+      // update wallet display
+      document.getElementById("gc").textContent = data.gc + "gc";
+      document.getElementById("sc").textContent = data.sc + "sc";
+
+      // **NEW**: show admin link if they’re an admin
+      if (data.isAdmin) {
+        document.getElementById("adminLink").style.display = "inline-block";
+      }
+    });
+  </script>
+</body>
+</html>
