@@ -7,120 +7,105 @@
   <style>
     body {
       margin: 0;
-      background: url('assets/club-bg-neon.png') no-repeat center center fixed;
+      background: url('club-bg-neon.png') no-repeat center center fixed;
       background-size: cover;
       font-family: 'Orbitron', sans-serif;
       color: white;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
     }
-
-    .signup-container {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 40px;
-      border-radius: 15px;
-      box-shadow: 0 0 15px red, 0 0 30px purple;
-    }
-
-    h1 {
+    .card {
+      background: rgba(0,0,0,0.8);
+      padding: 2em;
+      border-radius: 12px;
+      box-shadow: 0 0 15px red, 0 0 30px green;
+      width: 340px;
       text-align: center;
-      text-shadow: 0 0 10px red, 0 0 20px purple;
-      margin-bottom: 20px;
     }
-
-    label {
-      display: block;
-      margin: 10px 0 5px;
-    }
-
-    input {
+    .card h1 { margin-bottom: 1rem; }
+    .card input, .card select {
       width: 100%;
-      padding: 10px;
+      padding: 0.6rem;
+      margin: 0.5rem 0;
       border: none;
-      border-radius: 5px;
-      margin-bottom: 15px;
-      font-family: 'Orbitron', sans-serif;
+      border-radius: 6px;
     }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      font-family: 'Orbitron', sans-serif;
+    .card button {
       background: red;
       color: white;
+      padding: 0.7rem;
       border: none;
-      border-radius: 5px;
-      box-shadow: 0 0 10px red;
+      border-radius: 6px;
       cursor: pointer;
+      font-size: 1rem;
+      margin-top: 1rem;
     }
-
-    button:hover {
-      background: darkred;
-    }
+    .error { color: #ff6666; margin-top: 0.5rem; }
+    .success { color: #66ff66; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
-  <div class="signup-container">
-    <h1>Sign Up for ClubSocial</h1>
-    <form id="signupForm">
-      <label for="name">Name:</label>
-      <input type="text" id="name" required>
+  <div class="card">
+    <h1>Create Account</h1>
+    <form id="regForm">
+      <input type="email" id="regEmail" placeholder="Email" required />
+      <input type="password" id="regPassword"
+        placeholder="Password (min 8 chars, 1 uppercase, 1 number)"
+        pattern="(?=.*\\d)(?=.*[A-Z]).{8,}" required />
+      <input type="password" id="regConfirm" placeholder="Confirm Password" required />
 
-      <label for="email">Email:</label>
-      <input type="email" id="email" required>
-
-      <label for="password">Password:</label>
-      <input type="password" id="password" required>
-
-      <label for="birthday">Birthday:</label>
-      <input type="date" id="birthday" required>
-
-      <label for="address">Address:</label>
-      <input type="text" id="address" required>
+      <label for="regAvatar">Choose Your Avatar</label>
+      <select id="regAvatar" required>
+        <option value="">Select Avatar</option>
+        <option value="neon_player1.png">Avatar 1</option>
+        <option value="neon_player2.png">Avatar 2</option>
+        <option value="neon_player3.png">Avatar 3</option>
+        <option value="neon_player4.png">Avatar 4</option>
+        <option value="neon_player5.png">Avatar 5</option>
+        <option value="neon_player6.png">Avatar 6</option>
+        <option value="neon_player7.png">Avatar 7</option>
+        <option value="neon_player9.png">Avatar 9</option>
+      </select>
 
       <button type="submit">Sign Up</button>
     </form>
+    <div id="regMsg"></div>
+    <p style="margin-top:1em;">
+      Already have an account?
+      <a href="login.html" style="color:#66ccff;">Log in</a>
+    </p>
   </div>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import { register } from './scripts/auth.js';
+    const form = document.getElementById('regForm');
+    const msg = document.getElementById('regMsg');
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBDPUoVjXBPILsZHjN_5pYmRycTiFEfPi4",
-      authDomain: "clubsocial-9a801.firebaseapp.com",
-      databaseURL: "https://clubsocial-9a801-default-rtdb.firebaseio.com",
-      projectId: "clubsocial-9a801",
-      storageBucket: "clubsocial-9a801.firebasestorage.app",
-      messagingSenderId: "109445034619",
-      appId: "1:109445034619:web:9e58bedb70737d9df268de"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      msg.textContent = "";
 
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const birthday = document.getElementById("birthday").value;
-      const address = document.getElementById("address").value;
+      const email = form.regEmail.value;
+      const pw = form.regPassword.value;
+      const confirm = form.regConfirm.value;
+      const avatar = form.regAvatar.value;
+
+      if (pw !== confirm) {
+        msg.textContent = "Passwords do not match.";
+        msg.className = "error";
+        return;
+      }
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        console.log("User signed up:", user.uid);
-
-        // Optional: Save extra profile info to database later
-        // Redirect to profile setup or avatar selection
-        window.location.href = "profile-setup.html";
-      } catch (error) {
-        alert("Error: " + error.message);
+        await register(email, pw, avatar);
+        msg.textContent = "Account created! Check your email to verify.";
+        msg.className = "success";
+        form.reset();
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className = "error";
       }
     });
   </script>
