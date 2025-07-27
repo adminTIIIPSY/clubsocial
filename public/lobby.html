@@ -1,157 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>ClubSocial Lobby</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      background: url("club-bg-neon.png") no-repeat center center fixed;
+      background: url('/club-bg-neon.png') no-repeat center center fixed;
       background-size: cover;
       font-family: 'Orbitron', sans-serif;
       color: white;
-    }
-
-    header {
-      background: rgba(0, 0, 0, 0.8);
-      padding: 1rem 2rem;
+      text-align: center;
+      height: 100vh;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 0 15px red;
-    }
-
-    .profile {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .profile img {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      box-shadow: 0 0 10px green;
-    }
-
-    .profile span {
-      font-size: 1.2rem;
-    }
-
-    .games {
-      display: flex;
+      flex-direction: column;
       justify-content: center;
-      gap: 2rem;
-      margin-top: 8vh;
+      align-items: center;
     }
-
-    .game-btn {
-      padding: 2rem;
-      font-size: 1.5rem;
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid red;
-      border-radius: 12px;
-      color: white;
-      text-shadow: 0 0 10px red;
-      cursor: pointer;
-      transition: 0.3s ease;
-      min-width: 150px;
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 0 10px red;
     }
-
-    .game-btn:hover {
+    h1 {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+      text-shadow: 0 0 10px red, 0 0 20px green;
+    }
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid lime;
+      box-shadow: 0 0 10px lime;
+      margin-bottom: 1em;
+    }
+    .btn {
       background: red;
-      color: black;
-    }
-
-    #logoutBtn {
-      background: transparent;
-      border: 2px solid #66ccff;
-      color: #66ccff;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
+      color: white;
+      padding: 12px 24px;
+      font-size: 1.1em;
+      border: none;
       border-radius: 8px;
       cursor: pointer;
+      margin: 10px;
+      box-shadow: 0 0 10px red;
     }
-
-    footer {
-      text-align: center;
-      margin-top: 8vh;
-      font-size: 0.9rem;
-      opacity: 0.6;
+    .wallet {
+      font-size: 1.2em;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px 20px;
+      border-radius: 12px;
+      margin-top: 1em;
+      box-shadow: 0 0 10px green;
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="profile">
-      <img id="avatar" src="public/avatars/neon_player1.png" alt="Avatar">
-      <span id="username">Welcome, Player!</span>
-    </div>
-    <button id="logoutBtn">Logout</button>
+    <h2>Welcome to ClubSocial</h2>
   </header>
 
-  <section class="games">
-    <div class="game-btn" onclick="location.href='/poker.html'">Poker</div>
-    <div class="game-btn" onclick="location.href='/slots.html'">Slots</div>
-    <div class="game-btn" onclick="location.href='/crash.html'">Crash</div>
-  </section>
+  <img id="userAvatar" class="avatar" src="/avatars/neon_player1.png" alt="Your Avatar" />
+  <h1 id="username">Loading...</h1>
 
-  <footer>
-    &copy; 2025 ClubSocial. All rights reserved.
-  </footer>
+  <div class="wallet">
+    Wallet: <span id="walletBalance">Loading...</span>
+  </div>
+
+  <div>
+    <button class="btn" onclick="location.href='/poker.html'">Play Poker</button>
+    <button class="btn" onclick="location.href='/slots.html'">Play Slots</button>
+    <button class="btn" onclick="location.href='/crash.html'">Play Crash</button>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
-       apiKey: "AIzaSyAAJfscsLm4TdBzbYZ5dYa1BWZwpSPcVf8",
-  authDomain: "terpzyverseclubsocial.firebaseapp.com",
-  projectId: "terpzyverseclubsocial",
-  storageBucket: "terpzyverseclubsocial.firebasestorage.app",
-  messagingSenderId: "125077088870",
-  appId: "1:125077088870:web:91195a40d290c6bff09ba7"
+      apiKey: "AIzaSyAAJfscsLm4TdBzbYZ5dYa1BWZwpSPcVf8",
+      authDomain: "terpzyverseclubsocial.firebaseapp.com",
+      projectId: "terpzyverseclubsocial",
+      storageBucket: "terpzyverseclubsocial.appspot.com",
+      messagingSenderId: "125077088870",
+      appId: "1:125077088870:web:91195a40d290c6bff09ba7"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const usernameSpan = document.getElementById("username");
-    const avatarImg = document.getElementById("avatar");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    onAuthStateChanged(auth, async user => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          usernameSpan.textContent = `Welcome, ${data.username || user.email}`;
-          avatarImg.src = `public/avatars/${data.avatar || "neon_player1.png"}`;
-        } else {
-          usernameSpan.textContent = `Welcome, ${user.email}`;
-        }
-      } else {
-        window.location.href = "/login.html";
-      }
-    });
-
-    logoutBtn.addEventListener("click", () => {
-      signOut(auth).then(() => {
-        window.location.href = "/login.html";
-      });
-    });
-  </script>
-</body>
-</html>
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          document.getElementById("username").textContent = data.username || us
