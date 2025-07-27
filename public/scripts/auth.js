@@ -13,12 +13,12 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAAJfscsLm4TdBzbYZ5dYa1BWZwpSPcVf8",
+  authDomain: "terpzyverseclubsocial.firebaseapp.com",
+  projectId: "terpzyverseclubsocial",
+  storageBucket: "terpzyverseclubsocial.firebasestorage.app",
+  messagingSenderId: "125077088870",
+  appId: "1:125077088870:web:91195a40d290c6bff09ba7"
 };
 
 const app = initializeApp(firebaseConfig);
