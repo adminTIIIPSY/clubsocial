@@ -1,201 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Dashboard – ClubSocial</title>
+  <meta charset="UTF-8" />
+  <title>ClubSocial Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet" />
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-    h1 { color: #e33; }
-    .control {
-      margin-bottom: 24px;
-      padding: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    .control h3 {
-      margin-top: 0;
-    }
-    .control input, .control select, .control textarea {
-      width: calc(100% - 14px);
-      padding: 6px;
-      margin-bottom: 8px;
-      font-size: 1em;
-    }
-    .control button {
-      padding: 8px 16px;
-      font-size: 1em;
-      cursor: pointer;
-      background: #e33;
+      background: #000;
       color: #fff;
-      border: none;
-      border-radius: 4px;
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      padding: 2rem;
     }
-    .control button:hover { background: #c22; }
-    #statsResult {
-      white-space: pre-wrap;
-      background: #f5f5f5;
-      padding: 12px;
-      border-radius: 4px;
-      max-height: 200px;
-      overflow-y: auto;
+
+    h1 {
+      color: #32ff7e;
+      text-shadow: 0 0 10px red;
+    }
+
+    section {
+      margin-bottom: 2rem;
+      background: rgba(255,255,255,0.05);
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #32ff7e;
+    }
+
+    label {
+      display: block;
+      margin: 0.5rem 0;
+    }
+
+    input, select, textarea {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      width: 100%;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    button {
+      background: red;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .status {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
     }
   </style>
-  <script type="module">
-    import { initializeApp }               from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut }
-                                          from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc }   from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-    import { getFunctions, httpsCallable }
-                                          from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
-
-    // --- Firebase init ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyBDPUoVjXBPILsZHjN_5pYmRycTiFEfPi4",
-      authDomain: "clubsocial-9a801.firebaseapp.com",
-      projectId: "clubsocial-9a801",
-      storageBucket: "clubsocial-9a801.firebasestorage.app",
-      messagingSenderId: "109445034619",
-      appId: "1:109445034619:web:9e58bedb70737d9df268de"
-    };
-    const app       = initializeApp(firebaseConfig);
-    const auth      = getAuth(app);
-    const db        = getFirestore(app);
-    const functions = getFunctions(app);
-
-    // --- Cloud Functions stubs ---
-    const kickPlayerFn     = httpsCallable(functions, 'kickPlayer');
-    const banPlayerFn      = httpsCallable(functions, 'banPlayer');
-    const getUserStatsFn   = httpsCallable(functions, 'getUserStats');
-    const adjustBalanceFn  = httpsCallable(functions, 'adjustBalance');
-    const toggleAIFn       = httpsCallable(functions, 'toggleAIPlayers');
-    const broadcastMsgFn   = httpsCallable(functions, 'broadcastMessage');
-
-    // --- Auth guard for admins ---
-    onAuthStateChanged(auth, async user => {
-      if (!user) return window.location.href = '/login.html';
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (!snap.exists() || !snap.data().isAdmin) {
-        alert("Access denied.");
-        await signOut(auth);
-        return window.location.href = '/login.html';
-      }
-      document.getElementById('welcome').textContent =
-        `Welcome, Admin ${snap.data().username}!`;
-    });
-
-    // --- Handlers ---
-    window.handleKick = async () => {
-      const uid = document.getElementById('kickUid').value.trim();
-      if (!uid) return alert("Enter a user UID.");
-      try {
-        const { data } = await kickPlayerFn({ uid });
-        alert(data.message || 'Player kicked.');
-      } catch(e) {
-        alert("Error: " + e.message);
-      }
-    };
-
-    window.handleBan = async () => {
-      const uid = document.getElementById('banUid').value.trim();
-      if (!uid) return alert("Enter a user UID.");
-      try {
-        const { data } = await banPlayerFn({ uid });
-        alert(data.message || 'Player banned.');
-      } catch(e) {
-        alert("Error: " + e.message);
-      }
-    };
-
-    window.handleStats = async () => {
-      const uid = document.getElementById('statsUid').value.trim();
-      if (!uid) return alert("Enter a user UID.");
-      try {
-        const { data } = await getUserStatsFn({ uid });
-        document.getElementById('statsResult').textContent =
-          JSON.stringify(data, null, 2);
-      } catch(e) {
-        alert("Error: " + e.message);
-      }
-    };
-
-    window.handleAdjust = async () => {
-      const uid    = document.getElementById('balUid').value.trim();
-      const amount = parseFloat(document.getElementById('balAmt').value);
-      if (!uid || isNaN(amount)) return alert("Enter UID and valid amount.");
-      try {
-        const { data } = await adjustBalanceFn({ uid, amount });
-        alert(data.message || 'Balance updated.');
-      } catch(e) {
-        alert("Error: " + e.message);
-      }
-    };
-
-    window.handleToggleAI = async () => {
-      const enabled = document.getElementById('aiToggle').checked;
-      try {
-        const { data } = await toggleAIFn({ enabled });
-        alert(data.message || `AI Players ${enabled ? 'enabled' : 'disabled'}.`);
-      } catch(e) {
-        alert("Error: " + e.message);
-      }
-    };
-
-    window.handleBroadcast = async () => {
-      const msg = document.getElementById('broadcastMsg').value.trim();
-      if (!msg) return alert("Enter a message.");
-      try {
-        const { data } = await broadcastMsgFn({ message: msg });
-        alert(data.message || 'Broadcast sent.');
-      } catch(e) {
-        alert("Error: " + e.message);
-      }
-    };
-  </script>
 </head>
 <body>
-  <h1 id="welcome">Checking permissions…</h1>
+  <h1>ClubSocial Admin Dashboard</h1>
 
-  <div class="control">
-    <h3>Kick Player</h3>
-    <input id="kickUid" type="text" placeholder="Player UID">
-    <button onclick="handleKick()">Kick Player</button>
-  </div>
+  <!-- 1. Bonus Toggle -->
+  <section>
+    <h2>🎁 Daily Bonus Override</h2>
+    <label>
+      User ID:
+      <input type="text" id="bonusUserId" placeholder="Enter UID..." />
+    </label>
+    <button onclick="toggleBonus()">Toggle Bonus</button>
+    <div id="bonusStatus" class="status"></div>
+  </section>
 
-  <div class="control">
-    <h3>Ban Player</h3>
-    <input id="banUid" type="text" placeholder="Player UID">
-    <button onclick="handleBan()">Ban Player</button>
-  </div>
+  <!-- 2. Wallet Manager -->
+  <section>
+    <h2>💰 Wallet Manager</h2>
+    <label>User ID:</label>
+    <input type="text" id="walletUserId" placeholder="Enter UID..." />
+    <label>GoldCoins:</label>
+    <input type="number" id="walletGC" placeholder="GoldCoins" />
+    <label>SweepsCoin:</label>
+    <input type="number" id="walletSC" placeholder="SweepsCoin" />
+    <button onclick="updateWallet()">Update Wallet</button>
+    <div id="walletStatus" class="status"></div>
+  </section>
 
-  <div class="control">
-    <h3>Check User Stats</h3>
-    <input id="statsUid" type="text" placeholder="Player UID">
-    <button onclick="handleStats()">Get Stats</button>
-    <pre id="statsResult"></pre>
-  </div>
+  <!-- 3. Broadcast Panel -->
+  <section>
+    <h2>📢 Global Broadcast</h2>
+    <label>Title:</label>
+    <input type="text" id="broadcastTitle" />
+    <label>Message:</label>
+    <textarea id="broadcastBody" rows="4"></textarea>
+    <button onclick="sendBroadcast()">Send Message</button>
+    <div id="broadcastStatus" class="status"></div>
+  </section>
 
-  <div class="control">
-    <h3>Adjust Player Balance</h3>
-    <input id="balUid" type="text" placeholder="Player UID">
-    <input id="balAmt" type="number" step="0.01" placeholder="Amount to add/subtract">
-    <button onclick="handleAdjust()">Update Balance</button>
-  </div>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import {
+      getFirestore, doc, setDoc, updateDoc, getDoc
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import {
+      getAuth, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
-  <div class="control">
-    <h3>Toggle AI Players</h3>
-    <label><input id="aiToggle" type="checkbox"> Enable AI Players</label><br>
-    <button onclick="handleToggleAI()">Apply</button>
-  </div>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+    };
 
-  <div class="control">
-    <h3>Broadcast Message</h3>
-    <textarea id="broadcastMsg" rows="3" placeholder="Announcement to all users"></textarea>
-    <button onclick="handleBroadcast()">Send Broadcast</button>
-  </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const ADMIN_EMAIL = "adminTIIIPSY@example.com";
+
+    onAuthStateChanged(auth, user => {
+      if (!user || user.email !== ADMIN_EMAIL) {
+        alert("Unauthorized access.");
+        window.location.href = "index.html";
+      }
+    });
+
+    // Toggle bonus override
+    async function toggleBonus() {
+      const uid = document.getElementById('bonusUserId').value.trim();
+      const status = document.getElementById('bonusStatus');
+      if (!uid) return status.textContent = "Enter a user ID";
+
+      try {
+        const ref = doc(db, "bonusSpins", uid);
+        const snap = await getDoc(ref);
+        const enabled = snap.exists() && snap.data().enabled;
+        await setDoc(ref, { enabled: !enabled }, { merge: true });
+        status.textContent = `Bonus is now ${!enabled ? "ENABLED" : "DISABLED"} for ${uid}`;
+      } catch (err) {
+        status.textContent = err.message;
+      }
+    }
+
+    // Update wallet values
+    async function updateWallet() {
+      const uid = document.getElementById('walletUserId').value.trim();
+      const gc = parseInt(document.getElementById('walletGC').value);
+      const sc = parseInt(document.getElementById('walletSC').value);
+      const status = document.getElementById('walletStatus');
+
+      if (!uid) return status.textContent = "Enter a user ID";
+
+      try {
+        const ref = doc(db, "wallets", uid);
+        await setDoc(ref, {
+          GoldCoins: isNaN(gc) ? 0 : gc,
+          SweepsCoin: isNaN(sc) ? 0 : sc
+        }, { merge: true });
+        status.textContent = `Wallet updated for ${uid}`;
+      } catch (err) {
+        status.textContent = err.message;
+      }
+    }
+
+    // Send broadcast
+    async function sendBroadcast() {
+      const title = document.getElementById('broadcastTitle').value.trim();
+      const body = document.getElementById('broadcastBody').value.trim();
+      const status = document.getElementById('broadcastStatus');
+
+      if (!title || !body) return status.textContent = "Fill out both fields.";
+
+      try {
+        await setDoc(doc(db, "admin", "broadcast"), {
+          title,
+          body,
+          timestamp: new Date().toISOString()
+        });
+        status.textContent = "Broadcast message sent.";
+      } catch (err) {
+        status.textContent = err.message;
+      }
+    }
+  </script>
 </body>
 </html>
