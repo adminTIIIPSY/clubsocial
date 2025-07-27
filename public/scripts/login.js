@@ -10,7 +10,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAAJfscsLm4TdBzbYZ5dYa1BWZwpSPcVf8",
   authDomain: "terpzyverseclubsocial.firebaseapp.com",
   projectId: "terpzyverseclubsocial",
-  storageBucket: "terpzyverseclubsocial.appspot.com",
+  storageBucket: "terpzyverseclubsocial.firebasestorage.app",
   messagingSenderId: "125077088870",
   appId: "1:125077088870:web:91195a40d290c6bff09ba7"
 };
