@@ -1,1 +1,1 @@
-# clubsocial-poker100
+# clubsocial-poker1000
